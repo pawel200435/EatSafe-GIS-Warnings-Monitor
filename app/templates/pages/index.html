@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EatSafe - Monitorowanie Ostrzeżeń GIS</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/bootstrap.min.css') }}"
+    />
+    
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/all.css') }}"
+    />
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container-fluid vh-100 p-0">
+        <div class="row h-100 g-0">
+            <div class="col-auto p-0">
+                <nav class="sidebar w-100 h-100 d-flex flex-column align-items-center p-0 pt-1">
+                    <div class="text-center p-2 mb-3 w-100"><i class="fa-solid fa-bars fa-3x"></i></div>
+
+                    <button class="btn-navbar p-2 mb-5 w-100" title="Informacje"><i class="fa-solid fa-info fa-2x "></i></button>
+
+                    <button class="btn-navbar btn-navbar-active p-2 mb-5 w-100" title="Zagrożenia"><i class="fa-solid fa-triangle-exclamation fa-2x"></i></button>
+
+                    <button class="btn-navbar p-2 w-100" title="Newsletter"><i class="fa-solid fa-envelope fa-2x"></i></button>
+                </nav>
+            </div>
+
+            <div class="col h-100 w-100 d-flex flex-column bg-light">
+                <header class="topbar d-flex justify-content-between px-3 py-1 border-bottom border-black">
+                    <div class="logo">
+                        <h1 class="m-0 logo-text">
+                            <img src="{{ url_for('static', filename='img/icon.webp') }}" width="64" height="64" alt="logo"> Eat<span style="color: #70C1B3">Safe</span>
+                        </h1>
+                    </div>
+                    
+                    <div class="topbar-actions d-flex align-items-center">
+                        <span class="text-muted me-3 last-update">ostatnio zaktualizowano: 3min. temu</span>
+                        <button class="btn btn-outline-dark fw-semibold">
+                            <i class="fa-solid fa-rotate-right me-1"></i> Odśwież ostrzeżenia GIS
+                        </button>
+                    </div>
+                </header>
+
+                <main class="main-background h-100">
+                    <div class="d-flex justify-content-between align-items-center m-2">
+                        <div class="">
+                            <button type="button" class="btn btn-light fs-5">
+                                <i class="fa-solid fa-arrow-up-from-bracket fa-lg me-2"></i>
+                                Eksport
+                            </button>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-light fs-5 me-2"          
+                                data-bs-toggle="popover" 
+                                data-bs-placement="left" 
+                                data-popover-content="#sort-popover-template">
+                                <i class="fa-solid fa-sort fa-lg me-2"></i>
+                                Sortuj
+                            </button>
+
+                            <button type="button" class="btn btn-light fs-5 me-2"            
+                                data-bs-toggle="popover" 
+                                data-bs-placement="left" 
+                                data-popover-content="#filter-popover-template">
+                                <i class="fa-solid fa-filter fa-lg me-2"></i>
+                                Filtruj
+                            </button>
+
+                            <div class="input-group" style="width: 400px;">
+                                <span class="input-group-text bg-light border"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input type="search" 
+                                       class="form-control border" 
+                                       placeholder="Wyszukaj..."
+                                       name="q"
+                                       hx-get="/api/search" 
+                                       hx-trigger="keyup changed delay:500ms" 
+                                       hx-target="#lista-wynikow">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-none" id="sort-popover-template">
+                        {% include 'partials/sort_popover.html' %}
+                    </div>
+
+                    <div class="d-none" id="filter-popover-template">
+                        {% include 'partials/filter_popover.html' %}
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+
+    <script>
+        // script for sort and filter poopovers from bootstrap
+        document.addEventListener("DOMContentLoaded", function(){
+            let popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+            
+            let popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+            let contentSelector = popoverTriggerEl.getAttribute('data-popover-content');
+                
+            // setting poopover bootstrap options
+            let popoverOptions = {
+                html: true,
+                sanitize: false,
+            };
+
+            if (contentSelector) {
+                popoverOptions.content = function() {
+                    return document.querySelector(contentSelector).innerHTML;
+                };
+            }
+
+            return new bootstrap.Popover(popoverTriggerEl, popoverOptions);
+            });
+        });
+    </script>
+</body>
+</html>
