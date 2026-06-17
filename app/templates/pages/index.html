@@ -22,10 +22,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container-fluid vh-100 p-0">
+    <div class="container-fluid vh-100 p-0 overflow-hidden">
         <div class="row h-100 g-0">
-            <div class="col-auto p-0">
+            <div class="col-auto h-100 p-0">
                 <nav class="sidebar w-100 h-100 d-flex flex-column align-items-center p-0 pt-1">
+
                     <div class="text-center p-2 mb-3 w-100"><i class="fa-solid fa-bars fa-3x"></i></div>
 
                     <button class="btn-navbar p-2 mb-5 w-100" title="Informacje" data-bs-toggle="modal" data-bs-target="#infoModal"><i class="fa-solid fa-info fa-2x "></i></button>
@@ -52,7 +53,7 @@
                     </div>
                 </header>
 
-                <main class="main-background h-100">
+                <main class="main-background flex-grow-1 d-flex flex-column overflow-hidden">
                     <div class="d-flex justify-content-between align-items-center m-2">
                         <div class="">
                             <button type="button" class="btn btn-light fs-5">
@@ -86,7 +87,7 @@
                                        name="q"
                                        hx-get="/search" 
                                        hx-trigger="keyup changed delay:500ms" 
-                                       hx-target="#lista-wynikow">
+                                       hx-target="#result-list">
                             </div>
                         </div>
                     </div>
@@ -99,7 +100,7 @@
                         {% include 'partials/filter_popover.html' %}
                     </div>
 
-                    <div id="lista-wynikow" class="p-3 overflow-auto" style="max-height: calc(100% - 70px);">
+                    <div id="result-list" class="p-3 flex-grow-1 overflow-auto">
                         {% include 'partials/search_results.html' %}
                     </div>
                 </main>
