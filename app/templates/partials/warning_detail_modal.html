@@ -1,0 +1,118 @@
+<div class="modal fade" id="alertDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content shadow-lg border-0 border-rounded">
+            
+            <!-- modal header -->
+            <div class="modal-header border-bottom border-dark">
+                <h4 class="modal-title fw-bold text-dark">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Szczegóły Ostrzeżenia
+                </h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+            </div>
+            
+            <div class="modal-body text-dark px-4 pb-4 background-light-yellow">
+                
+                <!-- main title -->
+                <h4 class="fw-bold mb-4 text-center mt-3">{{ warning.title }}</h4>
+                
+                <div class="p-3 rounded shadow-sm border-black border mb-4">
+                    <p class="mb-2 fw-bold">
+                        <i class="fa-solid fa-industry me-2"></i> 
+                        Producent: 
+                        {{ warning.brand if warning.brand else 'Brak podanego producenta' }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fa-solid fa-calendar-days me-2"></i> 
+                        <strong>Data komunikatu:</strong> 
+                        {{ warning.publication_date.strftime('%Y-%m-%d') if warning.publication_date else 'Brak daty' }}
+                    </p>
+                    <p class="mb-0">
+                        <i class="fa-solid fa-exclamation me-2"></i> 
+                        <strong>Wykryte zagrożenie:</strong> 
+                        <span class="fw-semibold text-red">{{ warning.danger if warning.danger else 'Brak opisu zagrożenia' }}</span>
+                    </p>
+                </div>
+                
+                <!-- products list -->
+                <h6 class="fw-bold text-uppercase mb-3 fs-6">
+                    <i class="fa-solid fa-box-open me-2"></i> Wycofane produkty i partie:
+                </h6>
+                {% if warning.products %}
+                    <ul class="list-group mb-4 shadow-sm ">
+                        {% for product in warning.products %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center background-light-yellow border-black">
+                                <div>
+                                    <span class="fw-bold">{{ product.product_name }}</span>
+                                </div>
+                                <span class="badge background-blue rounded-pill p-2 text-wrap text-left">
+                                    Partia: {{ product.batch if product.batch else 'Brak' }}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="fst-italic mb-4">Brak danych o partiach.</p>
+                {% endif %}
+
+                <!-- recomendation -->
+                <h6 class="fw-bold text-uppercase mb-3 fs-6">
+                    <i class="fa-solid fa-user-shield me-2"></i> Zalecenia dla konsumentów:
+                </h6>
+                <div class="alert background-light-yellow border-dark shadow-sm mb-4 text-decoration-underline fw-bold">
+                    {{ warning.recommendations if warning.recommendations else 'Brak dodatkowych zaleceń ze strony GIS.' }}
+                </div>
+
+                <!-- photo carousel -->
+                {% if warning.images %}
+                    <h6 class="fw-bold text-uppercase mb-2 fs-6">
+                        <i class="fa-solid fa-camera me-2"></i> Zdjęcia produktu:
+                    </h6>
+                    
+                    <div id="productImagesCarousel" class="carousel slide rounded shadow-sm border p-2" data-bs-theme="dark">
+                        
+                        {% if warning.images|length > 1 %}
+                            <div class="carousel-indicators">
+                                {% for image in warning.images %}
+                                    <button type="button" data-bs-target="#productImagesCarousel" data-bs-slide-to="{{ loop.index0 }}" class="{% if loop.first %}active{% endif %}" aria-current="{% if loop.first %}true{% endif %}"></button>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- sides with images -->
+                        <div class="carousel-inner">
+                            {% for image in warning.images %}
+                                <!-- Jinja2 loop.first allows add class active only for first image -->
+                                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                    <img src="{{ image.img_url }}" 
+                                         alt="{{ image.alt_desc if image.alt_desc else 'zdjęcie produktu' }}" 
+                                         class="d-block w-100 rounded img-product-detail">
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- arrows left/right if images > 1-->
+                        {% if warning.images|length > 1 %}
+                            <button class="carousel-control-prev" type="button" data-bs-target="#productImagesCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon fw-bold" aria-hidden="true"></span>
+                                <span class="visually-hidden">Poprzednie</span>
+                            </button>
+                            <button class="carousel-control-next fw-bold" type="button" data-bs-target="#productImagesCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon fw-bold" aria-hidden="true"></span>
+                                <span class="visually-hidden">Następne</span>
+                            </button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+            </div>
+
+            <!-- modal footer -->
+            <div class="modal-footer border-top-0 pt-0 background-light-yellow">
+                <a href="{{ warning.link }}" target="_blank" class="btn btn-outline-blue fw-bold w-100">
+                    <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Oryginalny komunikat GIS
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

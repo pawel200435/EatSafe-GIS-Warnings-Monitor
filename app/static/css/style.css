@@ -83,3 +83,13 @@
 .alert-table {
     table-layout: fixed;
 }
+
+.background-light-yellow {
+    background-color: #F8FFD7;
+}
+
+.img-product-detail {
+    width: 100%;
+    height: 40em;
+    object-fit: contain;
+}

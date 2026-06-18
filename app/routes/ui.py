@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, abort
 from app.models import db, Warning, Product, Subscriber
 import re
 
@@ -85,3 +85,13 @@ def export_warnings():
     #TD: IMPLEMENTS FUNCIONS WHICH EXPORTS WARNINGS TO CSV/JSON FILE
     
     return
+
+@ui_bp.route('/ui/warning/<int:warning_id>')
+def get_warining_details(warning_id):
+    warning = Warning.query.filter_by(wID=warning_id).first()
+    
+    # if waring doesnt exist return 404 error
+    if not warning:
+        abort(404)
+        
+    return render_template('partials/warning_detail_modal.html', warning=warning)
