@@ -3,7 +3,7 @@
         <thead class="position-sticky top-0 bg-white border-bottom-2 border-black shadow-sm">
             <tr class="border-bottom-2 border-black bg-white align-middle">
                 <th class="text-center" style="width: 3%;">
-                    <input class="form-check-input m-0" type="checkbox">
+                    <input class="form-check-input m-0" type="checkbox" id="selectAllCheckboxes" title="Zaznacz wszystkie">
                 </th>
                 <th scope="col" style="width: 10%;">Zdjęcie</th>
                 <th scope="col" style="width: 27%;">Dotyczy (Produkt + Partia)</th>
@@ -18,7 +18,7 @@
             <tr>
                 <!-- checkbox -->
                 <td class="text-center">
-                    <input class="form-check-input" type="checkbox" value="{{ alert.wID }}">
+                    <input class="form-check-input alert-checkbox" type="checkbox" value="{{ alert.wID }}" name="alert_ids">
                 </td>
 
                 <!-- image -->
@@ -83,3 +83,29 @@
 {% else %}
     <p class="fs-3 text-center text-secondary">Brak ostrzeżeń o podanych parametrach</p>
 {% endif %}
+
+<script>
+    document.body.addEventListener('change', function(event) {
+    
+        // check/uncheck all
+        if (event.target.id === 'selectAllCheckboxes') {
+            const isChecked = event.target.checked;
+            const checkboxes = document.querySelectorAll('.alert-checkbox');
+            
+            checkboxes.forEach(el => {
+                el.checked = isChecked;
+            });
+        }
+        
+        // if user uncheck one element the th checkbox need to be uncheck too 
+        if (event.target.classList.contains('alert-checkbox')) {
+            const allCheckboxes = document.querySelectorAll('.alert-checkbox');
+            const allChecked = Array.from(allCheckboxes).every(el => el.checked);
+            
+            const selectAllCb = document.getElementById('selectAllCheckboxes');
+            if (selectAllCb) {
+                selectAllCb.checked = allChecked;
+            }
+        }
+    });
+</script>
