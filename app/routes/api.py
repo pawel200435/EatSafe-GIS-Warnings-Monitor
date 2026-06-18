@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.models import db, Subscriber
+from app.models import db, Subscriber, Warning, Product
 from sqlalchemy.exc import IntegrityError
 import re
 
@@ -114,5 +114,30 @@ def get_alerts():
     Returns a JSON array of all warning records.
     """
     alerts = Warning.query.order_by(Warning.publication_date.desc()).all()
+
+    return jsonify([warning_to_dict(alert) for alert in alerts]), 200
+
+@api_bp.route('/ostrzezenia/szukaj', methods=['GET'])
+def filter_alerts():
+    """
+    Handles a GET request that filters alerts based on query parameters.
+    Supports filtering by: zagrozenie (danger type), marka (brand), produkt (product name).
+    Multiple filters can be combined in a single request.
+    Returns a JSON array of matching warning records.
+    """
+    zagrozenie = request.args.get('zagrozenie', '').strip()
+    marka = request.args.get('marka', '').strip()
+    produkt = request.args.get('produkt', '').strip()
+
+    query = Warning.query
+
+    if zagrozenie:
+        query = query.filter(Warning.danger.ilike(f'%{zagrozenie}%'))
+    if marka:
+        query = query.filter(Warning.brand.ilike(f'%{marka}%'))
+    if produkt:
+        query = query.join(Product).filter(Product.product_name.ilike(f'%{produkt}%'))
+
+    alerts = query.order_by(Warning.publication_date.desc()).all()
 
     return jsonify([warning_to_dict(alert) for alert in alerts]), 200
