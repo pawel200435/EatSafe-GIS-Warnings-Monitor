@@ -74,7 +74,11 @@
                 </td>
 
                 <td class="text-center">
-                    <button class="btn btn-outline-blue btn-sm fw-bold px-3">Info</button>
+                    <button class="btn btn-outline-blue btn-sm fw-bold px-3"
+                    hx-get="/ui/warning/{{ alert.wID }}" 
+                    hx-target="#warning-detail-modal-container"
+                    hx-swap="innerHTML"
+                    >Info</button>
                 </td>
             </tr>
             {% endfor %}

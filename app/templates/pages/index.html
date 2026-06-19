@@ -113,6 +113,7 @@
 
 
     <!-- modals -->
+    <div id="warning-detail-modal-container"></div>
     {% include 'partials/info_modal.html' %}
     {% include 'partials/newsletter_modal.html' %}
     
@@ -142,6 +143,16 @@
 
             return new bootstrap.Popover(popoverTriggerEl, popoverOptions);
             });
+        });
+
+        // provides when user click info button from warning detail modal will shows up 
+        document.body.addEventListener("htmx:afterSwap", function(event) {
+            // Jeśli podmieniliśmy zawartość naszego pojemnika na modale...
+            if (event.detail.target.id === "warning-detail-modal-container") {
+                // Znajdź nowy modal i pokaż go na ekranie!
+                let newModal = new bootstrap.Modal(document.getElementById('alertDetailModal'));
+                newModal.show();
+            }
         });
     </script>
 </body>
