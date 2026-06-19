@@ -117,7 +117,7 @@ def get_alerts():
 def filter_alerts():
     """
     Handles a GET request that filters alerts based on query parameters.
-    Supports filtering by: zagrozenie (danger type), marka (brand), produkt (product name).
+    Supports filtering by: danger, brand, product_name.
     Multiple filters can be combined in a single request.
     Returns a JSON array of matching warning records.
     """
