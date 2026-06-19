@@ -1,13 +1,9 @@
 from flask import Blueprint, request, jsonify
 from app.models import db, Subscriber, Warning, Product
 from sqlalchemy.exc import IntegrityError
-import re
+from app.utils.validators import is_valid_email
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
-
-def is_valid_email(email):
-    email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$' # test@test.com
-    return re.match(email_pattern, email) is not None
 
 def warning_to_dict(warning):
     return {
