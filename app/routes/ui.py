@@ -35,40 +35,67 @@ def search_alerts():
     Filters warnings by product name, brand or danger and returns an HTML partial block.
     """
     search_query = request.args.get('q','').strip()
+    date_from = request.args.get('date_from', '').strip()
+    date_to = request.args.get('date_to', '').strip()
+    offset = request.args.get('offset', 0, type=int)
+
+    query = Warning.query.join(Product)
+
     if search_query:
         # Filter database records by product_name, brand or danger (ilike is case-insensitive)
-        filtered_alerts = Warning.query.join(Product).filter(or_(
+        query = query.filter(or_(
             Product.product_name.ilike(f'%{search_query}%'),
             Warning.brand.ilike(f'%{search_query}%'),
             Warning.danger.ilike(f'%{search_query}%')
-            )).order_by(Warning.publication_date.desc()).all()
-        return render_template('partials/search_results.html', alerts=filtered_alerts)
-    else:
-        # If the search field is cleared, get the most recent warnings with load more button
-        filtered_alerts = Warning.query.order_by(Warning.publication_date.desc()).limit(BATCH_SIZE).all()
-        total = Warning.query.count()
-        has_more = total > BATCH_SIZE
-        return render_template('partials/search_results.html', alerts=filtered_alerts,
-                               has_more=has_more, next_offset=BATCH_SIZE)
+        ))
 
-@ui_bp.route('/ui/load-more', methods=['GET'])
-def load_more():
-    """
-    Handles HTMX request to load the next batch of warnings.
-    Returns new table rows and an updated load more button.
-    """
-    offset = request.args.get('offset', BATCH_SIZE, type=int)
+    #Date >= FROM
+    if date_from:
+        query = query.filter(Warning.publication_date >= date_from)    
+
+    #Date <= TO
+    if date_to:
+        query = query.filter(Warning.publication_date <= date_to)
     
-    alerts = Warning.query.order_by(Warning.publication_date.desc()).offset(offset).limit(BATCH_SIZE).all()
-    
-    total = Warning.query.count()
+    total_matching = query.distinct().count()
+    filtered_alerts = query.order_by(Warning.publication_date.desc()).distinct().offset(offset).limit(BATCH_SIZE).all()
+
+    has_more = (offset + BATCH_SIZE) < total_matching
     next_offset = offset + BATCH_SIZE
-    has_more = next_offset < total
+
+
+    #check if request is from load-more
+    if request.headers.get('HX-Target') == 'load-more-row':
+        #render rows
+        rows_html = render_template('partials/alert_table_rows.html', alerts=filtered_alerts)
+        #render buttons
+        button_html = render_template('partials/load_more_warnings_button.html', has_more=has_more, next_offset=next_offset)
+
+        return rows_html + button_html
+        
+    #if request is from filtering/searching returns all table
+    else:
+        return render_template('partials/search_results.html', alerts=filtered_alerts, has_more=has_more, next_offset=next_offset)
+
+
+# @ui_bp.route('/ui/load-more', methods=['GET'])
+# def load_more():
+#     """
+#     Handles HTMX request to load the next batch of warnings.
+#     Returns new table rows and an updated load more button.
+#     """
+#     offset = request.args.get('offset', BATCH_SIZE, type=int)
     
-    return render_template('partials/load_more_response.html',
-                           alerts=alerts,
-                           has_more=has_more,
-                           next_offset=next_offset)
+#     alerts = Warning.query.order_by(Warning.publication_date.desc()).offset(offset).limit(BATCH_SIZE).all()
+    
+#     total = Warning.query.count()
+#     next_offset = offset + BATCH_SIZE
+#     has_more = next_offset < total
+    
+#     return render_template('partials/load_more_response.html',
+#                            alerts=alerts,
+#                            has_more=has_more,
+#                            next_offset=next_offset)
 
 @ui_bp.route('/ui/newsletter/subscribe', methods=['POST'])
 def subscirbe():
