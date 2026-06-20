@@ -49,54 +49,55 @@ def index():
 @ui_bp.route('/search')
 def search_alerts():
     """
-    Handles live-search requests triggered by HTMX.
+    Handles live-search requests and filtering triggered by HTMX.
     Filters warnings by product name, brand or danger and returns an HTML partial block.
     Supports sorting via the 'sort' query parameter.
     """
     search_query = request.args.get('q','').strip()
+    date_from = request.args.get('date_from', '').strip()
+    date_to = request.args.get('date_to', '').strip()
     sort_param = request.args.get('sort', 'date_desc')
+    offset = request.args.get('offset', 0, type=int)
+
+    #get all warnings also ones without products 
+    query = Warning.query.outerjoin(Product)
 
     if search_query:
-        query = Warning.query.join(Product).filter(or_(
+        # Filter database records by product_name, brand or danger (ilike is case-insensitive)
+        query = query.filter(or_(
             Product.product_name.ilike(f'%{search_query}%'),
             Warning.brand.ilike(f'%{search_query}%'),
             Warning.danger.ilike(f'%{search_query}%')
-            ))
+        ))
 
-        if sort_param in ('product_asc', 'product_desc'):
+    #Date >= FROM
+    if date_from:
+        query = query.filter(Warning.publication_date >= date_from)    
+    #Date <= TO
+    if date_to:
+        query = query.filter(Warning.publication_date <= f"{date_to} 23:59:59")
+    
+    if sort_param in ('product_asc', 'product_desc'):
             query = query.group_by(Warning.wID)
-        
-        query = query.order_by(get_sort_clause(sort_param))
-        filtered_alerts = query.all()
-        return render_template('partials/search_results.html', alerts=filtered_alerts,
-                               current_sort=sort_param)
-    else:
-        filtered_alerts = build_sorted_query(sort_param).limit(BATCH_SIZE).all()
-        total = Warning.query.count()
-        has_more = total > BATCH_SIZE
-        return render_template('partials/search_results.html', alerts=filtered_alerts,
-                               has_more=has_more, next_offset=BATCH_SIZE, current_sort=sort_param)
+    query = query.order_by(get_sort_clause(sort_param))
 
-@ui_bp.route('/ui/load-more', methods=['GET'])
-def load_more():
-    """
-    Handles HTMX request to load the next batch of warnings.
-    Returns new table rows and an updated load more button.
-    """
-    offset = request.args.get('offset', BATCH_SIZE, type=int)
-    sort_param = request.args.get('sort', 'date_desc')
-    
-    alerts = build_sorted_query(sort_param).offset(offset).limit(BATCH_SIZE).all()
-    
-    total = Warning.query.count()
+    total_matching = query.distinct().count()
+    filtered_alerts = query.order_by(Warning.publication_date.desc()).distinct().offset(offset).limit(BATCH_SIZE).all()
+
+    has_more = (offset + BATCH_SIZE) < total_matching
     next_offset = offset + BATCH_SIZE
-    has_more = next_offset < total
-    
-    return render_template('partials/load_more_response.html',
-                           alerts=alerts,
-                           has_more=has_more,
-                           next_offset=next_offset,
-                           current_sort=sort_param)
+
+    #check if request is from load-more
+    if request.headers.get('HX-Target') == 'load-more-row':
+        return render_template('partials/load_more_response.html', 
+                               alerts=filtered_alerts, has_more=has_more, 
+                               next_offset=next_offset, current_sort=sort_param)
+    #if request is from filtering/searching returns all table
+    else:
+        return render_template('partials/search_results.html', 
+                               alerts=filtered_alerts, has_more=has_more, 
+                               next_offset=next_offset, current_sort=sort_param)
+
 
 @ui_bp.route('/ui/newsletter/subscribe', methods=['POST'])
 def subscirbe():
