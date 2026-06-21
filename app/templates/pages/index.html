@@ -273,26 +273,33 @@
                 // It's a file -> stop HTMX from swapping it
                 evt.detail.shouldSwap = false;
 
-                // Build a downloadable blob from the response text
-                let blob = new Blob(['\ufeff' + xhr.response], {type: 'text/csv;charset=utf-8'});
-                let url = URL.createObjectURL(blob);
-
                 // Read filename from the Content-Disposition header
                 let disposition = xhr.getResponseHeader('Content-Disposition') || '';
                 let match = disposition.match(/filename=(.+)$/);
                 let filename = match ? match[1].trim() : 'raport.csv';
 
-                // Trigger the browser download
-                let a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                // Desktop app (pywebview): save through the Python bridge (native save dialog)
+                if (window.pywebview && window.pywebview.api && window.pywebview.api.save_csv) {
+                    window.pywebview.api.save_csv(filename, xhr.response).then(function(saved) {
+                        if (saved) {
+                            showExportToast('Poprawnie wyeksportowano zaznaczone dane', 'green');
+                        }
+                    });
+                // Browser: download via a blob (re-add the BOM stripped by the XHR decode)
+                } else {
+                    let blob = new Blob(['\ufeff' + xhr.response], {type: 'text/csv;charset=utf-8'});
+                    let url = URL.createObjectURL(blob);
 
-                // Show success toast (same styling as partials/toast_success.html)
-                showExportToast('Poprawnie wyeksportowano zaznaczone dane', 'green');
+                    let a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    showExportToast('Poprawnie wyeksportowano zaznaczone dane', 'green');
+                }
             }
             // otherwise it's the failure toast HTML -> let HTMX swap it normally
         });
